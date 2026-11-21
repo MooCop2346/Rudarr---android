@@ -20,11 +20,12 @@ import androidx.tv.material3.Button
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Text
 import com.ruddarr.tv.data.Instance
+import com.ruddarr.tv.data.Kind
 
 /** D-pad: focus a field and press select to open the TV keyboard (or use a phone's Google TV remote app). */
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun SetupScreen(initial: Instance?, onSave: (Instance) -> Unit) {
+fun SetupScreen(kind: Kind, initial: Instance?, onSave: (Instance) -> Unit) {
     var url by remember { mutableStateOf(initial?.url ?: "http://") }
     var key by remember { mutableStateOf(initial?.apiKey ?: "") }
 
@@ -33,10 +34,10 @@ fun SetupScreen(initial: Instance?, onSave: (Instance) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Radarr Instance")
+        Text(if (kind == Kind.Radarr) "Radarr Instance" else "Sonarr Instance")
         OutlinedTextField(
             value = url, onValueChange = { url = it }, singleLine = true,
-            label = { Text("URL (e.g. http://192.168.1.10:7878)") },
+            label = { Text("URL (e.g. http://192.168.1.10:${if (kind == Kind.Radarr) 7878 else 8989})") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.width(600.dp),
         )

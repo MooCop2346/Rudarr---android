@@ -26,19 +26,27 @@ import androidx.tv.material3.Button
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
+import com.ruddarr.tv.data.ArrApi
 import com.ruddarr.tv.data.Instance
-import com.ruddarr.tv.data.Movie
-import com.ruddarr.tv.data.RadarrApi
+import com.ruddarr.tv.data.Kind
+import com.ruddarr.tv.data.Media
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun LibraryScreen(instance: Instance, onOpen: (Movie) -> Unit, onSettings: () -> Unit) {
-    var movies by remember { mutableStateOf<List<Movie>?>(null) }
+fun LibraryScreen(
+    kind: Kind,
+    instance: Instance,
+    onKind: (Kind) -> Unit,
+    onOpen: (Media) -> Unit,
+    onSettings: () -> Unit,
+) {
+    var movies by remember(kind, instance) { mutableStateOf<List<Media>?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(instance) {
+    LaunchedEffect(kind, instance) {
         try {
-            movies = RadarrApi(instance).movies().sortedBy { it.sortTitle }
+            val api = ArrApi(instance)
+            movies = (if (kind == Kind.Radarr) api.movies() else api.series()).sortedBy { it.sortTitle }
             error = null
         } catch (e: Exception) {
             error = e.message ?: "Request failed"
@@ -47,8 +55,11 @@ fun LibraryScreen(instance: Instance, onOpen: (Movie) -> Unit, onSettings: () ->
 
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("Movies${movies?.let { " (${it.size})" } ?: ""}")
-            Button(onClick = onSettings) { Text("Settings") }
+            Text("${kind.label}${movies?.let { " (${it.size})" } ?: ""}")
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Kind.entries.filter { it != kind }.forEach { Button(onClick = { onKind(it) }) { Text(it.label) } }
+                Button(onClick = onSettings) { Text("Settings") }
+            }
         }
 
         when {
